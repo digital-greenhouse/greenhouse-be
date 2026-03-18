@@ -41,4 +41,5 @@ type UserService interface {
 	GetAllUsers(ctx context.Context) ([]User, error)
 	UpdateUser(ctx context.Context, user *User) error
 	DeleteUser(ctx context.Context, id uint) error
+	Login(ctx context.Context, email, password string) (string, *User, error)
 }
