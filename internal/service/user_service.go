@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"digital-greenhouse/greenhouse-be/internal/domain"
+	"digital-greenhouse/greenhouse-be/internal/security"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -57,4 +58,23 @@ func (s *userService) UpdateUser(ctx context.Context, user *domain.User) error {
 
 func (s *userService) DeleteUser(ctx context.Context, id uint) error {
 	return s.repo.Delete(ctx, id)
+}
+
+func (s *userService) Login(ctx context.Context, email, password string) (string, *domain.User, error) {
+	user, err := s.repo.GetByEmail(ctx, email)
+	if err != nil {
+		return "", nil, errors.New("credenciales inválidas")
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	if err != nil {
+		return "", nil, errors.New("credenciales inválidas")
+	}
+
+	token, err := security.GenerateToken(user)
+	if err != nil {
+		return "", nil, fmt.Errorf("error al generar el token: %w", err)
+	}
+
+	return token, user, nil
 }

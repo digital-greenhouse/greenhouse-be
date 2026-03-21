@@ -8,6 +8,7 @@ import (
 
 func RegisterUserRoutes(r chi.Router, userHandler *handler.UserHandler) {
 	r.Route("/users", func(r chi.Router) {
+		r.Post("/login", userHandler.Login)
 		r.Post("/", userHandler.CreateUser)
 		r.Get("/", userHandler.GetUsers)
 		r.Get("/{id}", userHandler.GetUser)

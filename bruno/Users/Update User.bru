@@ -1,0 +1,19 @@
+meta {
+  name: Update User
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{base_url}}/users/1
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Juan Actualizado",
+    "role": "OWNER",
+    "phone": "987654321"
+  }
+}

@@ -69,6 +69,27 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, http.StatusCreated, toUserResponse(user))
 }
 
+func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var req dto.LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		errResponse(w, http.StatusBadRequest, "payload inválido")
+		return
+	}
+
+	token, user, err := h.userService.Login(r.Context(), req.Email, req.Password)
+	if err != nil {
+		errResponse(w, http.StatusUnauthorized, err.Error())
+		return
+	}
+
+	resp := dto.LoginResponse{
+		Token: token,
+		User:  toUserResponse(user),
+	}
+
+	jsonResponse(w, http.StatusOK, resp)
+}
+
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
 	if err != nil {

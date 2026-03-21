@@ -30,6 +30,11 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	userSvc := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userSvc)
+
+	propertyRepo := repository.NewPropertyRepository(db)
+	propertySvc := service.NewPropertyService(propertyRepo, userRepo)
+	propertyHandler := handler.NewPropertyHandler(propertySvc)
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -37,6 +42,7 @@ func main() {
 
 	r.Route("/api/v1", func(r chi.Router) {
 		route.RegisterUserRoutes(r, userHandler)
+		route.RegisterPropertyRoutes(r, propertyHandler)
 	})
 
 	port := os.Getenv("PORT")
