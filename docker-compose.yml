@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  db:
+    image: mariadb:10.11
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: supersecreto
+      MARIADB_DATABASE: green_house_db
+    volumes:
+      # Guardamos los datos de forma persistente fuera del contenedor
+      - mariadb_data:/var/lib/mysql
+    # LA SEGURIDAD: No exponemos puertos (no hay sección "ports"). 
+    # Solo la API podrá ver la base de datos a través de la red interna.
+    networks:
+      - app-network
+
+  api:
+    build: .
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db  # <-- IMPORTANTE: Ahora apunta al servicio "db"
+      - DB_USER=root
+      - DB_PASSWORD=supersecreto
+      - DB_PORT=3306
+      - DB_NAME=green_house_db
+      - JWT_SECRET=YTG2il5kFnVPiT0Okq6bYSVQ88k6qAg09ndQCEEkerC
+    ports:
+      # LA SEGURIDAD: Forzamos a que Docker solo escuche en localhost.
+      # Si pones solo "8080:8080", Docker lo abre a todo internet ignorando el UFW.
+      - "127.0.0.1:8080:8080"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mariadb_data:

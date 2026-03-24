@@ -1,0 +1,35 @@
+meta {
+  name: Create Property
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/properties
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Imp1bGlhbkBleGFtcGxlLmNvbSIsImV4cCI6MTc3NDYyNDA3OCwicm9sZSI6IkNMSUVOVCIsInN1YiI6MX0.bevADVAA1bnb7ZFDS7ZGFZf3wJIRu1e3aBXJAhHzJQU
+}
+
+body:json {
+  {
+    "owner_id": 1,
+    "name": "Finca La Esmeralda",
+    "description": "Una hermosa finca con vista a las montañas.",
+    "address": "Km 5 Vía al Mar",
+    "base_price_per_night": 150.00,
+    "max_capacity": 8,
+    "images": [
+      {
+        "image_data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+        "mime_type": "image/png",
+        "alt_text": "Vista principal",
+        "is_cover": true,
+        "sort_order": 0
+      }
+    ]
+  }
+}
