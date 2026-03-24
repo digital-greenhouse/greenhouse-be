@@ -104,6 +104,20 @@ func (r *propertyRepository) Create(ctx context.Context, p *domain.Property) err
 	return err
 }
 
+func (r *propertyRepository) GetAll(ctx context.Context) ([]domain.Property, error) {
+	var models []PropertyDBModel
+	err := r.db.WithContext(ctx).Preload("Images").Find(&models).Error
+	if err != nil {
+		return nil, err
+	}
+
+	var props []domain.Property
+	for _, m := range models {
+		props = append(props, *toDomainProperty(m))
+	}
+	return props, nil
+}
+
 func (r *propertyRepository) GetByID(ctx context.Context, id uint) (*domain.Property, error) {
 	var m PropertyDBModel
 	err := r.db.WithContext(ctx).Preload("Images").First(&m, id).Error

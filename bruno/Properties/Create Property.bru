@@ -5,9 +5,13 @@ meta {
 }
 
 post {
-  url: {{base_url}}/api/v1/properties
+  url: {{base_url}}/properties
   body: json
   auth: none
+}
+
+headers {
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Imp1bGlhbkBleGFtcGxlLmNvbSIsImV4cCI6MTc3NDYyNDA3OCwicm9sZSI6IkNMSUVOVCIsInN1YiI6MX0.bevADVAA1bnb7ZFDS7ZGFZf3wJIRu1e3aBXJAhHzJQU
 }
 
 body:json {

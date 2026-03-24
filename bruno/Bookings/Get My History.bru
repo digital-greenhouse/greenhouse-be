@@ -1,0 +1,16 @@
+meta {
+  name: Get My History
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/bookings/history
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Imp1bGlhbkBleGFtcGxlLmNvbSIsImV4cCI6MTc3NDYyNDA3OCwicm9sZSI6IkNMSUVOVCIsInN1YiI6MX0.bevADVAA1bnb7ZFDS7ZGFZf3wJIRu1e3aBXJAhHzJQU
+  ~X-User-ID: 1
+}

@@ -1,0 +1,21 @@
+meta {
+  name: Cancel Booking
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{base_url}}/bookings/:id/cancel
+  body: json
+  auth: none
+}
+
+params:path {
+  id: 1
+}
+
+body:json {
+  {
+    "reason": "Cambio de planes personales"
+  }
+}

@@ -59,6 +59,10 @@ func (s *propertyService) CreateProperty(ctx context.Context, p *domain.Property
 	return nil
 }
 
+func (s *propertyService) ListProperties(ctx context.Context) ([]domain.Property, error) {
+	return s.repo.GetAll(ctx)
+}
+
 func (s *propertyService) GetPropertyByID(ctx context.Context, id uint) (*domain.Property, error) {
 	return s.repo.GetByID(ctx, id)
 }
