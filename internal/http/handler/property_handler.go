@@ -8,6 +8,7 @@ import (
 
 	"digital-greenhouse/greenhouse-be/internal/domain"
 	"digital-greenhouse/greenhouse-be/internal/http/dto"
+	"digital-greenhouse/greenhouse-be/internal/http/middleware"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -50,6 +51,13 @@ func toPropertyResponse(p *domain.Property) dto.PropertyResponse {
 }
 
 func (h *PropertyHandler) CreateProperty(w http.ResponseWriter, r *http.Request) {
+	// Obtener ID del usuario del token
+	ownerID := middleware.GetUserID(r.Context())
+	if ownerID == 0 {
+		errResponse(w, http.StatusUnauthorized, "se requiere autenticación")
+		return
+	}
+
 	var req dto.CreatePropertyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		errResponse(w, http.StatusBadRequest, "payload inválido")
@@ -57,7 +65,7 @@ func (h *PropertyHandler) CreateProperty(w http.ResponseWriter, r *http.Request)
 	}
 
 	property := &domain.Property{
-		OwnerID:           req.OwnerID,
+		OwnerID:           ownerID, // Sobrescribir siempre con el ID del token por seguridad
 		Name:              req.Name,
 		Description:       req.Description,
 		Address:           req.Address,
@@ -83,8 +91,44 @@ func (h *PropertyHandler) CreateProperty(w http.ResponseWriter, r *http.Request)
 	jsonResponse(w, http.StatusCreated, toPropertyResponse(property))
 }
 
+func (h *PropertyHandler) ListProperties(w http.ResponseWriter, r *http.Request) {
+	properties, err := h.service.ListProperties(r.Context())
+	if err != nil {
+		errResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	resp := make([]dto.PropertyResponse, len(properties))
+	for i := range properties {
+		resp[i] = toPropertyResponse(&properties[i])
+	}
+
+	jsonResponse(w, http.StatusOK, resp)
+}
+
+func (h *PropertyHandler) GetPropertyByID(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
+	if err != nil {
+		errResponse(w, http.StatusBadRequest, "ID de propiedad inválido")
+		return
+	}
+
+	property, err := h.service.GetPropertyByID(r.Context(), uint(id))
+	if err != nil {
+		errResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if property == nil {
+		errResponse(w, http.StatusNotFound, "propiedad no encontrada")
+		return
+	}
+
+	jsonResponse(w, http.StatusOK, toPropertyResponse(property))
+}
+
 func (h *PropertyHandler) GetPropertiesByOwner(w http.ResponseWriter, r *http.Request) {
-	ownerID, err := strconv.ParseUint(chi.URLParam(r, "ownerID"), 10, 32)
+	ownerID, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
 	if err != nil {
 		errResponse(w, http.StatusBadRequest, "ID de dueño inválido")
 		return

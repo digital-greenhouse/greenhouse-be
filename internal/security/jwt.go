@@ -21,6 +21,7 @@ func getSecretKey() []byte {
 func GenerateToken(user *domain.User) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":   user.ID,
+		"name":  user.Name,
 		"email": user.Email,
 		"role":  string(user.Role),
 		"exp":   time.Now().Add(time.Hour * 72).Unix(),
