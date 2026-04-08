@@ -240,6 +240,18 @@ func (r *bookingRepository) UpdateBookingStatus(ctx context.Context, id uint, st
 	return r.db.WithContext(ctx).Model(&BookingDBModel{}).Where("id = ?", id).Updates(updates).Error
 }
 
+func (r *bookingRepository) CheckAvailability(ctx context.Context, propertyID uint, checkIn, checkOut time.Time) (bool, error) {
+	var count int64
+	// Una reserva se solapa si: (nueva_entrada < reserva_salida) Y (nueva_salida > reserva_entrada)
+	// Solo contamos reservas CONFIRMED o PENDING_PAYMENT
+	err := r.db.WithContext(ctx).Model(&BookingDBModel{}).
+		Where("property_id = ? AND status IN (?, ?) AND check_in_date < ? AND check_out_date > ?",
+			propertyID, string(domain.BookingConfirmed), string(domain.BookingPending), checkOut, checkIn).
+		Count(&count).Error
+
+	return count == 0, err
+}
+
 func (r *bookingRepository) GetPricingRulesByPropertyID(ctx context.Context, propertyID uint, start, end time.Time) ([]domain.PricingRule, error) {
 	var models []PricingRuleDBModel
 	// Buscamos reglas que se solapen con el rango de fechas pedido y estén activas
