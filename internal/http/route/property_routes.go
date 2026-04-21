@@ -21,6 +21,12 @@ func RegisterPropertyRoutes(r chi.Router, propertyHandler *handler.PropertyHandl
 			r.Post("/", propertyHandler.CreateProperty)
 			r.Post("/{id}/images", propertyHandler.AddImage)
 			r.Delete("/images/{imageID}", propertyHandler.DeleteImage)
+
+			// Reglas de Precios
+			r.Post("/{id}/pricing-rules", propertyHandler.CreatePricingRule)
+			r.Get("/{id}/pricing-rules", propertyHandler.GetPricingRules)
+			r.Delete("/pricing-rules/{ruleId}", propertyHandler.DeletePricingRule)
+			r.Post("/{id}/pricing-rules/auto-generate", propertyHandler.AutoGeneratePricingRules)
 		})
 	})
 }
