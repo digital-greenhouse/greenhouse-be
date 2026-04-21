@@ -60,8 +60,8 @@ func (s *bookingService) CalculateQuote(ctx context.Context, propertyID uint, cl
 		modifier = rules[0].PriceModifier
 	}
 
-	// 4. Calcular total
-	total := float64(nights) * property.BasePricePerNight * modifier
+	// 4. Calcular total (Cobro por persona por noche)
+	total := float64(nights) * float64(guests) * property.BasePricePerNight * modifier
 
 	// 5. Crear cotización
 	expiresAt := time.Now().Add(48 * time.Hour) // 48 horas de validez

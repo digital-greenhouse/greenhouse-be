@@ -1,0 +1,15 @@
+meta {
+  name: Auto-generate High Season
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{base_url}}/properties/1/pricing-rules/auto-generate
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}

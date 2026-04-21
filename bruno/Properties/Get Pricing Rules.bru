@@ -1,16 +1,15 @@
 meta {
-  name: Get My History
+  name: Get Pricing Rules
   type: http
-  seq: 3
+  seq: 8
 }
 
 get {
-  url: {{base_url}}/bookings/history
+  url: {{base_url}}/properties/1/pricing-rules
   body: none
   auth: none
 }
 
 headers {
   Authorization: Bearer {{token}}
-  ~X-User-ID: 1
 }

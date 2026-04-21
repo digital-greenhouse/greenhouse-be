@@ -32,12 +32,13 @@ func main() {
 	userHandler := handler.NewUserHandler(userSvc)
 
 	propertyRepo := repository.NewPropertyRepository(db)
-	propertySvc := service.NewPropertyService(propertyRepo, userRepo)
-	propertyHandler := handler.NewPropertyHandler(propertySvc)
 
 	bookingRepo := repository.NewBookingRepository(db)
 	bookingSvc := service.NewBookingService(bookingRepo, propertyRepo)
 	bookingHandler := handler.NewBookingHandler(bookingSvc)
+
+	propertySvc := service.NewPropertyService(propertyRepo, userRepo, bookingRepo)
+	propertyHandler := handler.NewPropertyHandler(propertySvc)
 
 	paymentRepo := repository.NewPaymentRepository(db)
 	paymentSvc := service.NewPaymentService(paymentRepo, bookingRepo)
