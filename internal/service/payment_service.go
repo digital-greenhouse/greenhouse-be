@@ -8,14 +8,16 @@ import (
 )
 
 type paymentService struct {
-	repo        domain.PaymentRepository
-	bookingRepo domain.BookingRepository
+	repo         domain.PaymentRepository
+	bookingRepo  domain.BookingRepository
+	propertyRepo domain.PropertyRepository
 }
 
-func NewPaymentService(repo domain.PaymentRepository, bookingRepo domain.BookingRepository) domain.PaymentService {
+func NewPaymentService(repo domain.PaymentRepository, bookingRepo domain.BookingRepository, propertyRepo domain.PropertyRepository) domain.PaymentService {
 	return &paymentService{
-		repo:        repo,
-		bookingRepo: bookingRepo,
+		repo:         repo,
+		bookingRepo:  bookingRepo,
+		propertyRepo: propertyRepo,
 	}
 }
 
@@ -29,6 +31,11 @@ func (s *paymentService) ProcessPaymentProof(ctx context.Context, bookingID uint
 	// 2. Validar estado de la reserva
 	if booking.Status != domain.BookingPending {
 		return nil, errors.New("la reserva no está pendiente de pago")
+	}
+
+	// 2.1 Validar que el monto sea al menos el 50% del total
+	if amount < (booking.TotalPrice * 0.5) {
+		return nil, errors.New("el pago debe ser de al menos el 50% del total para confirmar la reserva")
 	}
 
 	// 3. Crear registro de pago
@@ -64,12 +71,47 @@ func (s *paymentService) VerifyPayment(ctx context.Context, paymentID uint, veri
 		return err
 	}
 
-	// 3. Si el pago es verificado, actualizar la reserva a CONFIRMED
+	// 3. Actualizar la reserva según el estado del pago
 	if status == domain.PaymentVerified {
 		if err := s.bookingRepo.UpdateBookingStatus(ctx, payment.BookingID, domain.BookingConfirmed, ""); err != nil {
+			return err
+		}
+	} else if status == domain.PaymentRejected {
+		// Al rechazar el pago, cancelamos la reserva para liberar las fechas
+		reasonStr := "Pago rechazado: " + reason
+		if err := s.bookingRepo.UpdateBookingStatus(ctx, payment.BookingID, domain.BookingCancelled, reasonStr); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func (s *paymentService) GetPaymentProof(ctx context.Context, paymentID uint, requesterID uint) (*domain.Payment, error) {
+	payment, err := s.repo.GetByID(ctx, paymentID)
+	if err != nil {
+		return nil, errors.New("pago no encontrado")
+	}
+
+	booking, err := s.bookingRepo.GetBookingByID(ctx, payment.BookingID)
+	if err != nil {
+		return nil, errors.New("reserva asociada no encontrada")
+	}
+
+	// 1. Validar si el solicitante es el cliente
+	if booking.ClientID == requesterID {
+		return payment, nil
+	}
+
+	// 2. Validar si el solicitante es el dueño de la propiedad
+	property, err := s.propertyRepo.GetByID(ctx, booking.PropertyID)
+	if err != nil {
+		return nil, errors.New("propiedad asociada no encontrada")
+	}
+
+	if property.OwnerID == requesterID {
+		return payment, nil
+	}
+
+	return nil, errors.New("no tienes permiso para ver este comprobante")
 }

@@ -1,0 +1,24 @@
+meta {
+  name: Get Reserved Dates
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/bookings/reserved-dates/1
+  body: none
+  auth: none
+}
+
+query {
+  ~propertyId: 1
+}
+
+docs {
+  ### Obtener Fechas Reservadas
+  Retorna un listado de rangos (check-in y check-out) de todas las reservas futuras que bloquean el calendario para una propiedad específica.
+  
+  **Estados incluidos:**
+  - `CONFIRMED`
+  - `PENDING_PAYMENT`
+}

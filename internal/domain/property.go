@@ -27,6 +27,16 @@ type Property struct {
 	Images            []PropertyImage
 }
 
+type PropertyFilter struct {
+	Search       string
+	Location     string
+	MinPrice     float64
+	MaxPrice     float64
+	GuestCount   int
+	CheckInDate  *time.Time
+	CheckOutDate *time.Time
+}
+
 type PropertyImage struct {
 	ID         uint
 	PropertyID uint
@@ -40,7 +50,7 @@ type PropertyImage struct {
 
 type PropertyRepository interface {
 	Create(ctx context.Context, property *Property) error
-	GetAll(ctx context.Context) ([]Property, error)
+	GetAll(ctx context.Context, filter PropertyFilter) ([]Property, error)
 	GetByID(ctx context.Context, id uint) (*Property, error)
 	GetByOwnerID(ctx context.Context, ownerID uint) ([]Property, error)
 	Update(ctx context.Context, property *Property) error
@@ -54,7 +64,7 @@ type PropertyRepository interface {
 
 type PropertyService interface {
 	CreateProperty(ctx context.Context, property *Property) error
-	ListProperties(ctx context.Context) ([]Property, error)
+	ListProperties(ctx context.Context, filter PropertyFilter) ([]Property, error)
 	GetPropertyByID(ctx context.Context, id uint) (*Property, error)
 	GetPropertiesByOwner(ctx context.Context, ownerID uint) ([]Property, error)
 	UpdateProperty(ctx context.Context, property *Property) error

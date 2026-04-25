@@ -4,14 +4,10 @@ meta {
   seq: 2
 }
 
-put {
-  url: {{base_url}}/payments/1/verify
+post {
+  url: {{baseUrl}}/payments/1/verify
   body: json
-  auth: none
-}
-
-headers {
-  Authorization: Bearer {{token}}
+  auth: bearer
 }
 
 body:json {
@@ -19,4 +15,13 @@ body:json {
     "status": "VERIFIED",
     "rejection_reason": ""
   }
+}
+
+docs {
+  ### Verificar Pago (Admin/Owner)
+  Permite al dueño o administrador validar un pago.
+  
+  **Resultados:**
+  - `VERIFIED`: La reserva pasa a `CONFIRMED`.
+  - `REJECTED`: La reserva pasa a `CANCELLED`, liberando las fechas.
 }

@@ -15,6 +15,9 @@ func RegisterPaymentRoutes(r chi.Router, paymentHandler *handler.PaymentHandler)
 		r.Post("/upload", paymentHandler.UploadProof)
 
 		// Admin/Owner verifica pago
-		r.Put("/{id}/verify", paymentHandler.VerifyPayment)
+		r.Post("/{id}/verify", paymentHandler.VerifyPayment)
+
+		// Descarga de comprobante
+		r.Get("/{id}/proof", paymentHandler.DownloadProof)
 	})
 }

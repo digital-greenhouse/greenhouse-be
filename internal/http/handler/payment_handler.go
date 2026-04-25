@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"digital-greenhouse/greenhouse-be/internal/domain"
 	"digital-greenhouse/greenhouse-be/internal/http/dto"
@@ -75,4 +78,40 @@ func (h *PaymentHandler) VerifyPayment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResponse(w, http.StatusOK, map[string]string{"message": "pago procesado exitosamente"})
+}
+
+func (h *PaymentHandler) DownloadProof(w http.ResponseWriter, r *http.Request) {
+	paymentID, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
+	if err != nil {
+		errResponse(w, http.StatusBadRequest, "ID de pago inválido")
+		return
+	}
+
+	requesterID := middleware.GetUserID(r.Context())
+	payment, err := h.service.GetPaymentProof(r.Context(), uint(paymentID), requesterID)
+	if err != nil {
+		errResponse(w, http.StatusForbidden, err.Error())
+		return
+	}
+
+	// 1. Limpiar el prefijo Base64 si existe (ej: data:image/jpeg;base64,)
+	rawBase64 := payment.ProofData
+	if idx := strings.Index(rawBase64, ";base64,"); idx != -1 {
+		rawBase64 = rawBase64[idx+8:]
+	}
+
+	// 2. Decodificar
+	data, err := base64.StdEncoding.DecodeString(rawBase64)
+	if err != nil {
+		errResponse(w, http.StatusInternalServerError, "error decodificando comprobante")
+		return
+	}
+
+	// 3. Configurar headers para descarga
+	w.Header().Set("Content-Type", payment.ProofMimeType)
+	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=comprobante_%d", payment.ID))
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 }
