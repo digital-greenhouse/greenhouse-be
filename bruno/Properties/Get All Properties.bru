@@ -1,11 +1,39 @@
 meta {
   name: Get All Properties
   type: http
-  seq: 2
+  seq: 7
 }
 
 get {
-  url: {{base_url}}/properties
+  url: {{test_url}}/properties?location=Medellin&min_price=100&guests=2&search=Finca&check_in=2024-05-01&check_out=2024-05-05
   body: none
   auth: none
+}
+
+params:query {
+  location: Medellin
+  min_price: 100
+  guests: 2
+  search: Finca
+  check_in: 2024-05-01
+  check_out: 2024-05-05
+  ~location: Medellin
+  ~min_price: 100
+  ~max_price: 500
+  ~guests: 2
+  ~search: Finca
+  ~check_in: 2024-05-01
+  ~check_out: 2024-05-05
+}
+
+docs {
+  ### Listar y Filtrar Propiedades
+  Permite obtener todas las propiedades activas con filtros opcionales.
+  
+  **Filtros Disponibles:**
+  - `search`: Busca en nombre y descripción.
+  - `location`: Busca en la dirección.
+  - `min_price` / `max_price`: Rango de precio base.
+  - `guests`: Capacidad mínima de huéspedes.
+  - `check_in` / `check_out`: Filtra propiedades que tengan disponibilidad total en este rango (AAAA-MM-DD).
 }

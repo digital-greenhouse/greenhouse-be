@@ -1,0 +1,21 @@
+meta {
+  name: Download Proof
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/payments/1/proof
+  body: none
+  auth: bearer
+}
+
+docs {
+  ### Descargar Comprobante de Pago
+  Permite descargar el comprobante original en formato binario (Imagen o PDF).
+  
+  **Seguridad:**
+  - Solo el **Cliente** que hizo la reserva puede descargarlo.
+  - Solo el **Propietario** de la finca puede descargarlo.
+  - El sistema detecta automáticamente el `Content-Type` y decodifica el Base64.
+}

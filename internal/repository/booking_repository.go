@@ -243,6 +243,58 @@ func (r *bookingRepository) GetBookingsByPropertyID(ctx context.Context, propert
 	return bookings, nil
 }
 
+func (r *bookingRepository) GetBookingsByOwnerID(ctx context.Context, ownerID uint) ([]domain.Booking, error) {
+	var models []struct {
+		BookingDBModel
+		ClientName   string `gorm:"column:client_name"`
+		ClientPhone  string `gorm:"column:client_phone"`
+		PropertyName string `gorm:"column:property_name"`
+	}
+
+	err := r.db.WithContext(ctx).
+		Table("bookings").
+		Select("bookings.*, users.name as client_name, users.phone as client_phone, properties.name as property_name").
+		Joins("JOIN properties ON bookings.property_id = properties.id").
+		Joins("JOIN users ON bookings.client_id = users.id").
+		Where("properties.owner_id = ?", ownerID).
+		Order("bookings.created_at DESC").
+		Scan(&models).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	bookings := make([]domain.Booking, len(models))
+	for i, m := range models {
+		b := *toDomainBooking(m.BookingDBModel)
+		b.ClientName = m.ClientName
+		b.ClientPhone = m.ClientPhone
+		b.PropertyName = m.PropertyName
+		bookings[i] = b
+	}
+	return bookings, nil
+}
+
+func (r *bookingRepository) GetReservedDatesByPropertyID(ctx context.Context, propertyID uint) ([]domain.Booking, error) {
+	var models []BookingDBModel
+	// Consultamos reservas futuras con estados que bloquean el calendario
+	err := r.db.WithContext(ctx).
+		Select("check_in_date, check_out_date").
+		Where("property_id = ? AND status IN (?, ?) AND check_out_date >= ?",
+			propertyID, string(domain.BookingConfirmed), string(domain.BookingPending), time.Now()).
+		Order("check_in_date ASC").
+		Find(&models).Error
+	if err != nil {
+		return nil, err
+	}
+
+	bookings := make([]domain.Booking, len(models))
+	for i, m := range models {
+		bookings[i] = *toDomainBooking(m)
+	}
+	return bookings, nil
+}
+
 func (r *bookingRepository) UpdateBookingStatus(ctx context.Context, id uint, status domain.BookingStatus, reason string) error {
 	updates := map[string]interface{}{
 		"status": string(status),

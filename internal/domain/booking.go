@@ -64,6 +64,11 @@ type Booking struct {
 	SpecialRequests    string
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
+
+	// Datos para el Owner
+	ClientName   string
+	ClientPhone  string
+	PropertyName string
 }
 
 type BookingRepository interface {
@@ -78,6 +83,8 @@ type BookingRepository interface {
 	GetBookingByID(ctx context.Context, id uint) (*Booking, error)
 	GetBookingsByClientID(ctx context.Context, clientID uint) ([]Booking, error)
 	GetBookingsByPropertyID(ctx context.Context, propertyID uint) ([]Booking, error)
+	GetBookingsByOwnerID(ctx context.Context, ownerID uint) ([]Booking, error)
+	GetReservedDatesByPropertyID(ctx context.Context, propertyID uint) ([]Booking, error)
 	UpdateBookingStatus(ctx context.Context, id uint, status BookingStatus, reason string) error
 	CheckAvailability(ctx context.Context, propertyID uint, checkIn, checkOut time.Time) (bool, error)
 
@@ -99,4 +106,6 @@ type BookingService interface {
 	// Gestión
 	CancelBooking(ctx context.Context, bookingID uint, reason string) error
 	GetClientHistory(ctx context.Context, clientID uint) ([]Booking, error)
+	GetReservedDates(ctx context.Context, propertyID uint) ([]Booking, error)
+	GetOwnerBookings(ctx context.Context, ownerID uint) ([]Booking, error)
 }

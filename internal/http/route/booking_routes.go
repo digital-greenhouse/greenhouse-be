@@ -9,6 +9,9 @@ import (
 
 func RegisterBookingRoutes(r chi.Router, bookingHandler *handler.BookingHandler) {
 	r.Route("/bookings", func(r chi.Router) {
+		// Rutas públicas
+		r.Get("/reserved-dates/{propertyId}", bookingHandler.GetReservedDates)
+
 		// Ruta con autenticación opcional (puede ser invitado)
 		r.With(middleware.OptionalAuthMiddleware).Post("/quote", bookingHandler.CreateQuote)
 
@@ -18,6 +21,7 @@ func RegisterBookingRoutes(r chi.Router, bookingHandler *handler.BookingHandler)
 			
 			r.Post("/", bookingHandler.CreateBooking)
 			r.Get("/history", bookingHandler.GetMyHistory)
+			r.Get("/owner", bookingHandler.GetOwnerBookings)
 			r.Post("/{id}/cancel", bookingHandler.CancelBooking)
 		})
 	})

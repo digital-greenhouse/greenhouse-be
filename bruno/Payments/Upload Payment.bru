@@ -5,21 +5,27 @@ meta {
 }
 
 post {
-  url: {{base_url}}/payments/upload
+  url: {{baseUrl}}/payments/upload
   body: json
-  auth: none
-}
-
-headers {
-  Authorization: Bearer {{token}}
+  auth: bearer
 }
 
 body:json {
   {
-    "booking_id": 3,
-    "amount": 250000.00,
+    "booking_id": 1,
+    "amount": 250.00,
     "payment_method": "TRANSFERENCIA",
-    "proof_data": "BASE64_IMAGE_DATA_HERE",
+    "proof_data": "data:image/jpeg;base64,...",
     "proof_mime_type": "image/jpeg"
   }
+}
+
+docs {
+  ### Subir comprobante de pago
+  Sube el comprobante del primer pago de la reserva.
+  
+  **Reglas:**
+  - Debe ser al menos el **50% del total** de la reserva.
+  - El estado del pago será `PENDING_VERIFICATION`.
+  - La reserva debe estar en estado `PENDING_PAYMENT`.
 }

@@ -106,3 +106,48 @@ func (h *BookingHandler) CancelBooking(w http.ResponseWriter, r *http.Request) {
 
 	jsonResponse(w, http.StatusOK, map[string]string{"message": "reserva cancelada exitosamente"})
 }
+
+func (h *BookingHandler) GetReservedDates(w http.ResponseWriter, r *http.Request) {
+	propertyID, err := strconv.ParseUint(chi.URLParam(r, "propertyId"), 10, 32)
+	if err != nil {
+		errResponse(w, http.StatusBadRequest, "ID de propiedad inválido")
+		return
+	}
+
+	reserved, err := h.service.GetReservedDates(r.Context(), uint(propertyID))
+	if err != nil {
+		errResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	resp := make([]dto.ReservedDateResponse, len(reserved))
+	for i, b := range reserved {
+		resp[i] = dto.ReservedDateResponse{
+			CheckInDate:  b.CheckInDate.Format("2006-01-02"),
+			CheckOutDate: b.CheckOutDate.Format("2006-01-02"),
+		}
+	}
+
+	jsonResponse(w, http.StatusOK, resp)
+}
+
+func (h *BookingHandler) GetOwnerBookings(w http.ResponseWriter, r *http.Request) {
+	ownerID := middleware.GetUserID(r.Context())
+	if ownerID == 0 {
+		errResponse(w, http.StatusUnauthorized, "se requiere autenticación")
+		return
+	}
+
+	bookings, err := h.service.GetOwnerBookings(r.Context(), ownerID)
+	if err != nil {
+		errResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	resp := make([]dto.BookingResponse, len(bookings))
+	for i := range bookings {
+		resp[i] = dto.ToBookingResponse(&bookings[i])
+	}
+
+	jsonResponse(w, http.StatusOK, resp)
+}

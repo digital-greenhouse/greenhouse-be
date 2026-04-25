@@ -1,0 +1,24 @@
+meta {
+  name: Get Owner Bookings
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/bookings/owner
+  body: none
+  auth: bearer
+}
+
+docs {
+  ### Dashboard del Propietario (Owner)
+  Obtiene todas las reservas realizadas a las propiedades que pertenecen al usuario autenticado.
+  
+  **Información incluida por reserva:**
+  - Datos de la reserva (fechas, total, estado).
+  - `client_name`: Nombre del cliente que reservó.
+  - `client_phone`: Teléfono de contacto del cliente.
+  - `property_name`: Nombre de la propiedad reservada.
+  
+  *Nota: El ID del propietario se extrae automáticamente del token JWT.*
+}

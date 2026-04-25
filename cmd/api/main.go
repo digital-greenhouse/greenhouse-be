@@ -41,7 +41,7 @@ func main() {
 	propertyHandler := handler.NewPropertyHandler(propertySvc)
 
 	paymentRepo := repository.NewPaymentRepository(db)
-	paymentSvc := service.NewPaymentService(paymentRepo, bookingRepo)
+	paymentSvc := service.NewPaymentService(paymentRepo, bookingRepo, propertyRepo)
 	paymentHandler := handler.NewPaymentHandler(paymentSvc)
 
 	r := chi.NewRouter()

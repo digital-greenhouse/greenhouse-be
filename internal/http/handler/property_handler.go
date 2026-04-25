@@ -92,7 +92,36 @@ func (h *PropertyHandler) CreateProperty(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *PropertyHandler) ListProperties(w http.ResponseWriter, r *http.Request) {
-	properties, err := h.service.ListProperties(r.Context())
+	q := r.URL.Query()
+
+	filter := domain.PropertyFilter{
+		Search:   q.Get("search"),
+		Location: q.Get("location"),
+	}
+
+	if minPrice, err := strconv.ParseFloat(q.Get("min_price"), 64); err == nil {
+		filter.MinPrice = minPrice
+	}
+	if maxPrice, err := strconv.ParseFloat(q.Get("max_price"), 64); err == nil {
+		filter.MaxPrice = maxPrice
+	}
+	if guests, err := strconv.Atoi(q.Get("guests")); err == nil {
+		filter.GuestCount = guests
+	}
+
+	// Parsing de fechas
+	if checkInStr := q.Get("check_in"); checkInStr != "" {
+		if t, err := time.Parse("2006-01-02", checkInStr); err == nil {
+			filter.CheckInDate = &t
+		}
+	}
+	if checkOutStr := q.Get("check_out"); checkOutStr != "" {
+		if t, err := time.Parse("2006-01-02", checkOutStr); err == nil {
+			filter.CheckOutDate = &t
+		}
+	}
+
+	properties, err := h.service.ListProperties(r.Context(), filter)
 	if err != nil {
 		errResponse(w, http.StatusInternalServerError, err.Error())
 		return
