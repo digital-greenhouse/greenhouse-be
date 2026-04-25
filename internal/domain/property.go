@@ -63,4 +63,10 @@ type PropertyService interface {
 	AddPropertyImage(ctx context.Context, image *PropertyImage) error
 	UpdatePropertyImage(ctx context.Context, image *PropertyImage) error
 	DeletePropertyImage(ctx context.Context, imageID uint) error
+
+	// Pricing Rules
+	CreatePricingRule(ctx context.Context, rule *PricingRule) error
+	ListPricingRulesByProperty(ctx context.Context, propertyID uint) ([]PricingRule, error)
+	DeletePricingRule(ctx context.Context, id uint) error
+	AutoGenerateHighSeasonRules(ctx context.Context, propertyID uint) error
 }

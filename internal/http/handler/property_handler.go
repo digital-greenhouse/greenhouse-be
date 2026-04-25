@@ -192,3 +192,109 @@ func (h *PropertyHandler) DeleteImage(w http.ResponseWriter, r *http.Request) {
 
 	jsonResponse(w, http.StatusNoContent, nil)
 }
+
+func (h *PropertyHandler) CreatePricingRule(w http.ResponseWriter, r *http.Request) {
+	propertyID, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
+	if err != nil {
+		errResponse(w, http.StatusBadRequest, "ID de propiedad inválido")
+		return
+	}
+
+	var req dto.CreatePricingRuleRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		errResponse(w, http.StatusBadRequest, "payload inválido")
+		return
+	}
+
+	startDate, err := time.Parse("2006-01-02", req.StartDate)
+	if err != nil {
+		errResponse(w, http.StatusBadRequest, "fecha de inicio inválida (use AAAA-MM-DD)")
+		return
+	}
+	endDate, err := time.Parse("2006-01-02", req.EndDate)
+	if err != nil {
+		errResponse(w, http.StatusBadRequest, "fecha de fin inválida (use AAAA-MM-DD)")
+		return
+	}
+
+	rule := &domain.PricingRule{
+		PropertyID:    uint(propertyID),
+		Name:          req.Name,
+		StartDate:     startDate,
+		EndDate:       endDate,
+		PriceModifier: req.PriceModifier,
+		Description:   req.Description,
+		IsActive:      true,
+	}
+
+	if err := h.service.CreatePricingRule(r.Context(), rule); err != nil {
+		errResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	jsonResponse(w, http.StatusCreated, toPricingRuleResponse(rule))
+}
+
+func (h *PropertyHandler) GetPricingRules(w http.ResponseWriter, r *http.Request) {
+	propertyID, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
+	if err != nil {
+		errResponse(w, http.StatusBadRequest, "ID de propiedad inválido")
+		return
+	}
+
+	rules, err := h.service.ListPricingRulesByProperty(r.Context(), uint(propertyID))
+	if err != nil {
+		errResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	resp := make([]dto.PricingRuleDTO, len(rules))
+	for i := range rules {
+		resp[i] = toPricingRuleResponse(&rules[i])
+	}
+
+	jsonResponse(w, http.StatusOK, resp)
+}
+
+func (h *PropertyHandler) DeletePricingRule(w http.ResponseWriter, r *http.Request) {
+	ruleID, err := strconv.ParseUint(chi.URLParam(r, "ruleId"), 10, 32)
+	if err != nil {
+		errResponse(w, http.StatusBadRequest, "ID de regla inválido")
+		return
+	}
+
+	if err := h.service.DeletePricingRule(r.Context(), uint(ruleID)); err != nil {
+		errResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	jsonResponse(w, http.StatusNoContent, nil)
+}
+
+func (h *PropertyHandler) AutoGeneratePricingRules(w http.ResponseWriter, r *http.Request) {
+	propertyID, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
+	if err != nil {
+		errResponse(w, http.StatusBadRequest, "ID de propiedad inválido")
+		return
+	}
+
+	if err := h.service.AutoGenerateHighSeasonRules(r.Context(), uint(propertyID)); err != nil {
+		errResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	jsonResponse(w, http.StatusOK, map[string]string{"message": "reglas de temporada alta generadas exitosamente"})
+}
+
+func toPricingRuleResponse(r *domain.PricingRule) dto.PricingRuleDTO {
+	return dto.PricingRuleDTO{
+		ID:            r.ID,
+		PropertyID:    r.PropertyID,
+		Name:          r.Name,
+		StartDate:     r.StartDate.Format("2006-01-02"),
+		EndDate:       r.EndDate.Format("2006-01-02"),
+		PriceModifier: r.PriceModifier,
+		Description:   r.Description,
+		IsActive:      r.IsActive,
+	}
+}

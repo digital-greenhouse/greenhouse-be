@@ -33,3 +33,22 @@ type PropertyResponse struct {
 	UpdatedAt         string             `json:"updated_at"`
 	Images            []PropertyImageDTO `json:"images,omitempty"`
 }
+
+type PricingRuleDTO struct {
+	ID            uint    `json:"id"`
+	PropertyID    uint    `json:"property_id"`
+	Name          string  `json:"name"`
+	StartDate     string  `json:"start_date"`
+	EndDate       string  `json:"end_date"`
+	PriceModifier float64 `json:"price_modifier"`
+	Description   string  `json:"description"`
+	IsActive      bool    `json:"is_active"`
+}
+
+type CreatePricingRuleRequest struct {
+	Name          string  `json:"name"`
+	StartDate     string  `json:"start_date"` // format: 2006-01-02
+	EndDate       string  `json:"end_date"`   // format: 2006-01-02
+	PriceModifier float64 `json:"price_modifier"`
+	Description   string  `json:"description"`
+}

@@ -1,0 +1,25 @@
+meta {
+  name: Add Pricing Rule
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{base_url}}/properties/1/pricing-rules
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "Temporada de Cometas",
+    "start_date": "2026-08-01",
+    "end_date": "2026-08-31",
+    "price_modifier": 1.15,
+    "description": "Aumento por festival de cometas"
+  }
+}

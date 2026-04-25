@@ -79,9 +79,13 @@ type BookingRepository interface {
 	GetBookingsByClientID(ctx context.Context, clientID uint) ([]Booking, error)
 	GetBookingsByPropertyID(ctx context.Context, propertyID uint) ([]Booking, error)
 	UpdateBookingStatus(ctx context.Context, id uint, status BookingStatus, reason string) error
+	CheckAvailability(ctx context.Context, propertyID uint, checkIn, checkOut time.Time) (bool, error)
 
 	// Pricing Rules
+	CreatePricingRule(ctx context.Context, rule *PricingRule) error
 	GetPricingRulesByPropertyID(ctx context.Context, propertyID uint, start, end time.Time) ([]PricingRule, error)
+	GetAllPricingRulesByPropertyID(ctx context.Context, propertyID uint) ([]PricingRule, error)
+	DeletePricingRule(ctx context.Context, id uint) error
 }
 
 type BookingService interface {

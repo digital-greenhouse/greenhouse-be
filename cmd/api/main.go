@@ -32,12 +32,17 @@ func main() {
 	userHandler := handler.NewUserHandler(userSvc)
 
 	propertyRepo := repository.NewPropertyRepository(db)
-	propertySvc := service.NewPropertyService(propertyRepo, userRepo)
-	propertyHandler := handler.NewPropertyHandler(propertySvc)
 
 	bookingRepo := repository.NewBookingRepository(db)
 	bookingSvc := service.NewBookingService(bookingRepo, propertyRepo)
 	bookingHandler := handler.NewBookingHandler(bookingSvc)
+
+	propertySvc := service.NewPropertyService(propertyRepo, userRepo, bookingRepo)
+	propertyHandler := handler.NewPropertyHandler(propertySvc)
+
+	paymentRepo := repository.NewPaymentRepository(db)
+	paymentSvc := service.NewPaymentService(paymentRepo, bookingRepo)
+	paymentHandler := handler.NewPaymentHandler(paymentSvc)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -48,6 +53,7 @@ func main() {
 		route.RegisterUserRoutes(r, userHandler)
 		route.RegisterPropertyRoutes(r, propertyHandler)
 		route.RegisterBookingRoutes(r, bookingHandler)
+		route.RegisterPaymentRoutes(r, paymentHandler)
 	})
 
 	port := os.Getenv("PORT")

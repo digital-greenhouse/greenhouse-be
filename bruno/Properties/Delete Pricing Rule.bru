@@ -1,16 +1,15 @@
 meta {
-  name: Get My History
+  name: Delete Pricing Rule
   type: http
-  seq: 3
+  seq: 10
 }
 
-get {
-  url: {{base_url}}/bookings/history
+delete {
+  url: {{base_url}}/properties/pricing-rules/1
   body: none
   auth: none
 }
 
 headers {
   Authorization: Bearer {{token}}
-  ~X-User-ID: 1
 }

@@ -83,6 +83,19 @@ func toDomainPricingRule(m PricingRuleDBModel) domain.PricingRule {
 	}
 }
 
+func fromDomainPricingRule(d *domain.PricingRule) PricingRuleDBModel {
+	return PricingRuleDBModel{
+		ID:            d.ID,
+		PropertyID:    d.PropertyID,
+		Name:          d.Name,
+		StartDate:     d.StartDate,
+		EndDate:       d.EndDate,
+		PriceModifier: d.PriceModifier,
+		Description:   d.Description,
+		IsActive:      d.IsActive,
+	}
+}
+
 func toDomainQuote(m QuoteDBModel) *domain.Quote {
 	return &domain.Quote{
 		ID:                m.ID,
@@ -240,11 +253,33 @@ func (r *bookingRepository) UpdateBookingStatus(ctx context.Context, id uint, st
 	return r.db.WithContext(ctx).Model(&BookingDBModel{}).Where("id = ?", id).Updates(updates).Error
 }
 
+func (r *bookingRepository) CheckAvailability(ctx context.Context, propertyID uint, checkIn, checkOut time.Time) (bool, error) {
+	var count int64
+	// Una reserva se solapa si: (nueva_entrada < reserva_salida) Y (nueva_salida > reserva_entrada)
+	// Solo contamos reservas CONFIRMED o PENDING_PAYMENT
+	err := r.db.WithContext(ctx).Model(&BookingDBModel{}).
+		Where("property_id = ? AND status IN (?, ?) AND check_in_date < ? AND check_out_date > ?",
+			propertyID, string(domain.BookingConfirmed), string(domain.BookingPending), checkOut, checkIn).
+		Count(&count).Error
+
+	return count == 0, err
+}
+
+func (r *bookingRepository) CreatePricingRule(ctx context.Context, rule *domain.PricingRule) error {
+	m := fromDomainPricingRule(rule)
+	err := r.db.WithContext(ctx).Create(&m).Error
+	if err == nil {
+		rule.ID = m.ID
+		rule.CreatedAt = m.CreatedAt
+	}
+	return err
+}
+
 func (r *bookingRepository) GetPricingRulesByPropertyID(ctx context.Context, propertyID uint, start, end time.Time) ([]domain.PricingRule, error) {
 	var models []PricingRuleDBModel
 	// Buscamos reglas que se solapen con el rango de fechas pedido y estén activas
 	err := r.db.WithContext(ctx).
-		Where("property_id = ? AND is_active = TRUE AND ((start_date <= ? AND end_date >= ?) OR (start_date <= ? AND end_date >= ?))", 
+		Where("property_id = ? AND is_active = TRUE AND ((start_date <= ? AND end_date >= ?) OR (start_date <= ? AND end_date >= ?))",
 			propertyID, end, start, end, start).
 		Find(&models).Error
 	if err != nil {
@@ -255,4 +290,21 @@ func (r *bookingRepository) GetPricingRulesByPropertyID(ctx context.Context, pro
 		rules[i] = toDomainPricingRule(m)
 	}
 	return rules, nil
+}
+
+func (r *bookingRepository) GetAllPricingRulesByPropertyID(ctx context.Context, propertyID uint) ([]domain.PricingRule, error) {
+	var models []PricingRuleDBModel
+	err := r.db.WithContext(ctx).Where("property_id = ?", propertyID).Order("start_date ASC").Find(&models).Error
+	if err != nil {
+		return nil, err
+	}
+	rules := make([]domain.PricingRule, len(models))
+	for i, m := range models {
+		rules[i] = toDomainPricingRule(m)
+	}
+	return rules, nil
+}
+
+func (r *bookingRepository) DeletePricingRule(ctx context.Context, id uint) error {
+	return r.db.WithContext(ctx).Delete(&PricingRuleDBModel{}, id).Error
 }

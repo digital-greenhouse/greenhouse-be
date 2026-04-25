@@ -36,6 +36,15 @@ func (s *bookingService) CalculateQuote(ctx context.Context, propertyID uint, cl
 		return nil, errors.New("la cantidad de huéspedes excede la capacidad máxima")
 	}
 
+	// 1.1 Validar disponibilidad
+	available, err := s.repo.CheckAvailability(ctx, propertyID, checkIn, checkOut)
+	if err != nil {
+		return nil, err
+	}
+	if !available {
+		return nil, errors.New("la propiedad no está disponible para las fechas seleccionadas")
+	}
+
 	// 2. Calcular noches
 	nights := int(math.Ceil(checkOut.Sub(checkIn).Hours() / 24))
 	
@@ -51,8 +60,8 @@ func (s *bookingService) CalculateQuote(ctx context.Context, propertyID uint, cl
 		modifier = rules[0].PriceModifier
 	}
 
-	// 4. Calcular total
-	total := float64(nights) * property.BasePricePerNight * modifier
+	// 4. Calcular total (Cobro por persona por noche)
+	total := float64(nights) * float64(guests) * property.BasePricePerNight * modifier
 
 	// 5. Crear cotización
 	expiresAt := time.Now().Add(48 * time.Hour) // 48 horas de validez
@@ -89,6 +98,15 @@ func (s *bookingService) CreateBookingFromQuote(ctx context.Context, quoteID uin
 	if quote.ExpiresAt != nil && time.Now().After(*quote.ExpiresAt) {
 		s.repo.UpdateQuoteStatus(ctx, quoteID, domain.QuoteExpired)
 		return nil, errors.New("la cotización ha expirado")
+	}
+
+	// Re-validar disponibilidad (por si alguien reservó en el intermedio)
+	available, err := s.repo.CheckAvailability(ctx, quote.PropertyID, quote.CheckInDate, quote.CheckOutDate)
+	if err != nil {
+		return nil, err
+	}
+	if !available {
+		return nil, errors.New("la propiedad ya no está disponible para estas fechas")
 	}
 
 	// Crear reserva
