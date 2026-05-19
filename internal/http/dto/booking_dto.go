@@ -51,7 +51,9 @@ type BookingResponse struct {
 	// Datos Dashboard
 	ClientName   string `json:"client_name,omitempty"`
 	ClientPhone  string `json:"client_phone,omitempty"`
-	PropertyName string `json:"property_name,omitempty"`
+	PropertyName       string               `json:"property_name,omitempty"`
+	PaymentID          *uint                `json:"payment_id,omitempty"`
+	PaymentStatus      *domain.PaymentStatus `json:"payment_status,omitempty"`
 }
 
 type ReservedDateResponse struct {
@@ -94,5 +96,7 @@ func ToBookingResponse(b *domain.Booking) BookingResponse {
 		ClientName:         b.ClientName,
 		ClientPhone:        b.ClientPhone,
 		PropertyName:       b.PropertyName,
+		PaymentID:          b.PaymentID,
+		PaymentStatus:      b.PaymentStatus,
 	}
 }

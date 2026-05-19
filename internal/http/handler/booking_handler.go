@@ -87,6 +87,27 @@ func (h *BookingHandler) GetMyHistory(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, http.StatusOK, resp)
 }
 
+func (h *BookingHandler) GetBookingsByUserID(w http.ResponseWriter, r *http.Request) {
+	userID, err := strconv.ParseUint(chi.URLParam(r, "userId"), 10, 32)
+	if err != nil {
+		errResponse(w, http.StatusBadRequest, "ID de usuario inválido")
+		return
+	}
+
+	bookings, err := h.service.GetClientHistory(r.Context(), uint(userID))
+	if err != nil {
+		errResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	resp := make([]dto.BookingResponse, len(bookings))
+	for i := range bookings {
+		resp[i] = dto.ToBookingResponse(&bookings[i])
+	}
+
+	jsonResponse(w, http.StatusOK, resp)
+}
+
 func (h *BookingHandler) CancelBooking(w http.ResponseWriter, r *http.Request) {
 	bookingID, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
 	if err != nil {

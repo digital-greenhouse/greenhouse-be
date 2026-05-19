@@ -65,6 +65,10 @@ type Booking struct {
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
 
+	// Datos del pago asociado
+	PaymentID     *uint
+	PaymentStatus *PaymentStatus
+
 	// Datos para el Owner
 	ClientName   string
 	ClientPhone  string

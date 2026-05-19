@@ -14,3 +14,13 @@ headers {
   Authorization: Bearer {{token}}
   ~X-User-ID: 1
 }
+
+docs {
+  ### Historial de Reservas del Cliente
+  Obtiene todas las reservas realizadas por el usuario autenticado.
+  
+  **Información clave en la respuesta:**
+  - `status`: Estado de la reserva (PENDING_PAYMENT, CONFIRMED, etc).
+  - `payment_id`: ID del comprobante de pago (si ya se subió uno).
+  - `payment_status`: Estado de verificación del pago.
+}

@@ -21,6 +21,7 @@ func RegisterBookingRoutes(r chi.Router, bookingHandler *handler.BookingHandler)
 			
 			r.Post("/", bookingHandler.CreateBooking)
 			r.Get("/history", bookingHandler.GetMyHistory)
+			r.Get("/user/{userId}", bookingHandler.GetBookingsByUserID)
 			r.Get("/owner", bookingHandler.GetOwnerBookings)
 			r.Post("/{id}/cancel", bookingHandler.CancelBooking)
 		})
