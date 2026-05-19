@@ -212,21 +212,54 @@ func (r *bookingRepository) CreateBooking(ctx context.Context, b *domain.Booking
 }
 
 func (r *bookingRepository) GetBookingByID(ctx context.Context, id uint) (*domain.Booking, error) {
-	var m BookingDBModel
-	if err := r.db.WithContext(ctx).First(&m, id).Error; err != nil {
+	var m struct {
+		BookingDBModel
+		PaymentID     *uint                 `gorm:"column:payment_id"`
+		PaymentStatus *domain.PaymentStatus `gorm:"column:payment_status"`
+	}
+
+	err := r.db.WithContext(ctx).
+		Table("bookings").
+		Select("bookings.*, p.id as payment_id, p.status as payment_status").
+		Joins("LEFT JOIN payments p ON p.booking_id = bookings.id AND p.id = (SELECT MAX(id) FROM payments WHERE booking_id = bookings.id)").
+		Where("bookings.id = ?", id).
+		First(&m).Error
+
+	if err != nil {
 		return nil, err
 	}
-	return toDomainBooking(m), nil
+
+	b := toDomainBooking(m.BookingDBModel)
+	b.PaymentID = m.PaymentID
+	b.PaymentStatus = m.PaymentStatus
+	return b, nil
 }
 
 func (r *bookingRepository) GetBookingsByClientID(ctx context.Context, clientID uint) ([]domain.Booking, error) {
-	var models []BookingDBModel
-	if err := r.db.WithContext(ctx).Where("client_id = ?", clientID).Find(&models).Error; err != nil {
+	var models []struct {
+		BookingDBModel
+		PaymentID     *uint                 `gorm:"column:payment_id"`
+		PaymentStatus *domain.PaymentStatus `gorm:"column:payment_status"`
+	}
+
+	err := r.db.WithContext(ctx).
+		Table("bookings").
+		Select("bookings.*, p.id as payment_id, p.status as payment_status").
+		Joins("LEFT JOIN payments p ON p.booking_id = bookings.id AND p.id = (SELECT MAX(id) FROM payments WHERE booking_id = bookings.id)").
+		Where("bookings.client_id = ?", clientID).
+		Order("bookings.created_at DESC").
+		Find(&models).Error
+
+	if err != nil {
 		return nil, err
 	}
+
 	bookings := make([]domain.Booking, len(models))
 	for i, m := range models {
-		bookings[i] = *toDomainBooking(m)
+		b := *toDomainBooking(m.BookingDBModel)
+		b.PaymentID = m.PaymentID
+		b.PaymentStatus = m.PaymentStatus
+		bookings[i] = b
 	}
 	return bookings, nil
 }
@@ -246,16 +279,24 @@ func (r *bookingRepository) GetBookingsByPropertyID(ctx context.Context, propert
 func (r *bookingRepository) GetBookingsByOwnerID(ctx context.Context, ownerID uint) ([]domain.Booking, error) {
 	var models []struct {
 		BookingDBModel
-		ClientName   string `gorm:"column:client_name"`
-		ClientPhone  string `gorm:"column:client_phone"`
-		PropertyName string `gorm:"column:property_name"`
+		ClientName    string                `gorm:"column:client_name"`
+		ClientPhone   string                `gorm:"column:client_phone"`
+		PropertyName  string                `gorm:"column:property_name"`
+		PaymentID     *uint                 `gorm:"column:payment_id"`
+		PaymentStatus *domain.PaymentStatus `gorm:"column:payment_status"`
 	}
 
 	err := r.db.WithContext(ctx).
 		Table("bookings").
-		Select("bookings.*, users.name as client_name, users.phone as client_phone, properties.name as property_name").
+		Select(`bookings.*, 
+				users.name as client_name, 
+				users.phone as client_phone, 
+				properties.name as property_name,
+				p.id as payment_id,
+				p.status as payment_status`).
 		Joins("JOIN properties ON bookings.property_id = properties.id").
 		Joins("JOIN users ON bookings.client_id = users.id").
+		Joins("LEFT JOIN payments p ON p.booking_id = bookings.id AND p.id = (SELECT MAX(id) FROM payments WHERE booking_id = bookings.id)").
 		Where("properties.owner_id = ?", ownerID).
 		Order("bookings.created_at DESC").
 		Scan(&models).Error
@@ -270,6 +311,8 @@ func (r *bookingRepository) GetBookingsByOwnerID(ctx context.Context, ownerID ui
 		b.ClientName = m.ClientName
 		b.ClientPhone = m.ClientPhone
 		b.PropertyName = m.PropertyName
+		b.PaymentID = m.PaymentID
+		b.PaymentStatus = m.PaymentStatus
 		bookings[i] = b
 	}
 	return bookings, nil

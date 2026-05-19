@@ -5,9 +5,13 @@ meta {
 }
 
 post {
-  url: {{baseUrl}}/payments/1/verify
+  url: {{base_url}}/payments/1/verify
   body: json
   auth: bearer
+}
+
+headers {
+  Authorization: Bearer {{token}}
 }
 
 body:json {

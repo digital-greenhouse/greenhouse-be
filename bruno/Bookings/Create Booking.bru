@@ -17,7 +17,17 @@ headers {
 
 body:json {
   {
-    "quote_id": 7,
+    "quote_id": 1,
+    
+    
     "special_requests": "Me gustaría llegar 2 horas antes si es posible."
   }
+}
+
+docs {
+  ### Crear Reserva desde Cotización
+  Convierte una cotización activa en una reserva formal.
+  
+  **Respuesta:**
+  Devuelve el objeto de la reserva creada, incluyendo `payment_id` (que estará en null inicialmente) y `payment_status`.
 }

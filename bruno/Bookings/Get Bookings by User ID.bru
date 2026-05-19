@@ -1,0 +1,26 @@
+meta {
+  name: Get Bookings by User ID
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{base_url}}/bookings/user/2
+  body: none
+  auth: bearer
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+docs {
+  ### Obtener Reservas por ID de Usuario
+  Permite obtener el historial de reservas de cualquier usuario especificando su ID.
+  
+  **Seguridad:**
+  - Requiere estar autenticado (cualquier rol).
+  
+  **Parámetros:**
+  - `userId`: ID del cliente cuyas reservas se desean consultar.
+}

@@ -5,9 +5,13 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/bookings/owner
+  url: {{base_url}}/bookings/owner
   body: none
   auth: bearer
+}
+
+headers {
+  Authorization: Bearer {{token}}
 }
 
 docs {
@@ -19,6 +23,8 @@ docs {
   - `client_name`: Nombre del cliente que reservó.
   - `client_phone`: Teléfono de contacto del cliente.
   - `property_name`: Nombre de la propiedad reservada.
+  - `payment_id`: ID del último pago asociado (útil para ver comprobantes).
+  - `payment_status`: Estado del último pago.
   
   *Nota: El ID del propietario se extrae automáticamente del token JWT.*
 }
