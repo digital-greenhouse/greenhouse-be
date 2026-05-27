@@ -100,17 +100,37 @@ func (h *PaymentHandler) DownloadProof(w http.ResponseWriter, r *http.Request) {
 		rawBase64 = rawBase64[idx+8:]
 	}
 
-	// 2. Decodificar
+	// 2. Limpiar espacios y saltos de línea (robustez)
+	rawBase64 = strings.Join(strings.Fields(rawBase64), "")
+
+	// 3. Decodificar (intentar estándar y luego raw por si falta padding)
 	data, err := base64.StdEncoding.DecodeString(rawBase64)
 	if err != nil {
-		errResponse(w, http.StatusInternalServerError, "error decodificando comprobante")
-		return
+		data, err = base64.RawStdEncoding.DecodeString(rawBase64)
+		if err != nil {
+			errResponse(w, http.StatusInternalServerError, "error decodificando comprobante: "+err.Error())
+			return
+		}
 	}
 
-	// 3. Configurar headers para descarga
+	// 4. Configurar headers para descarga
 	w.Header().Set("Content-Type", payment.ProofMimeType)
 	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=comprobante_%d", payment.ID))
+
+	// Determinar extensión según el MIME type
+	ext := ""
+	switch payment.ProofMimeType {
+	case "image/jpeg":
+		ext = ".jpg"
+	case "image/png":
+		ext = ".png"
+	case "application/pdf":
+		ext = ".pdf"
+	case "image/webp":
+		ext = ".webp"
+	}
+
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=comprobante_%d%s", payment.ID, ext))
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
