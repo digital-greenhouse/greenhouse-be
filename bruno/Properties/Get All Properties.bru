@@ -5,18 +5,18 @@ meta {
 }
 
 get {
-  url: {{test_url}}/properties?location=Medellin&min_price=100&guests=2&search=Finca&check_in=2024-05-01&check_out=2024-05-05
+  url: {{base_url}}/properties
   body: none
   auth: none
 }
 
 params:query {
-  location: Medellin
-  min_price: 100
-  guests: 2
-  search: Finca
-  check_in: 2024-05-01
-  check_out: 2024-05-05
+  ~location: Medellin
+  ~min_price: 100
+  ~guests: 2
+  ~search: Finca
+  ~check_in: 2024-05-01
+  ~check_out: 2024-05-05
   ~location: Medellin
   ~min_price: 100
   ~max_price: 500

@@ -5,13 +5,13 @@ meta {
 }
 
 get {
-  url: {{base_url}}/bookings/user/2
+  url: {{test_url}}/bookings/user/2
   body: none
   auth: bearer
 }
 
 headers {
-  Authorization: Bearer {{token}}
+  ~Authorization: Bearer {{token}}
 }
 
 docs {

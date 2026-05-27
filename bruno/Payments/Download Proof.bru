@@ -5,9 +5,13 @@ meta {
 }
 
 get {
-  url: {{base_url}}/payments/1/proof
+  url: {{test_url}}/payments/1/proof
   body: none
   auth: bearer
+}
+
+headers {
+  Authorization: Bearer {{token}}
 }
 
 docs {
