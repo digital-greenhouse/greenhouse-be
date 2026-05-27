@@ -47,6 +47,18 @@ type BookingResponse struct {
 	CancellationReason string               `json:"cancellation_reason,omitempty"`
 	SpecialRequests    string               `json:"special_requests,omitempty"`
 	CreatedAt          time.Time            `json:"created_at"`
+
+	// Datos Dashboard
+	ClientName   string `json:"client_name,omitempty"`
+	ClientPhone  string `json:"client_phone,omitempty"`
+	PropertyName       string               `json:"property_name,omitempty"`
+	PaymentID          *uint                `json:"payment_id,omitempty"`
+	PaymentStatus      *domain.PaymentStatus `json:"payment_status,omitempty"`
+}
+
+type ReservedDateResponse struct {
+	CheckInDate  string `json:"check_in"`
+	CheckOutDate string `json:"check_out"`
 }
 
 func ToQuoteResponse(q *domain.Quote) QuoteResponse {
@@ -81,5 +93,10 @@ func ToBookingResponse(b *domain.Booking) BookingResponse {
 		CancellationReason: b.CancellationReason,
 		SpecialRequests:    b.SpecialRequests,
 		CreatedAt:          b.CreatedAt,
+		ClientName:         b.ClientName,
+		ClientPhone:        b.ClientPhone,
+		PropertyName:       b.PropertyName,
+		PaymentID:          b.PaymentID,
+		PaymentStatus:      b.PaymentStatus,
 	}
 }

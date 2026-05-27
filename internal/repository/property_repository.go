@@ -104,9 +104,48 @@ func (r *propertyRepository) Create(ctx context.Context, p *domain.Property) err
 	return err
 }
 
-func (r *propertyRepository) GetAll(ctx context.Context) ([]domain.Property, error) {
+func (r *propertyRepository) GetAll(ctx context.Context, filter domain.PropertyFilter) ([]domain.Property, error) {
 	var models []PropertyDBModel
-	err := r.db.WithContext(ctx).Preload("Images").Find(&models).Error
+	query := r.db.WithContext(ctx).Preload("Images").Where("status = ?", "ACTIVE")
+
+	// Filtro por búsqueda general (nombre o descripción)
+	if filter.Search != "" {
+		searchTerm := "%" + filter.Search + "%"
+		query = query.Where("(name LIKE ? OR description LIKE ?)", searchTerm, searchTerm)
+	}
+
+	// Filtro por ubicación
+	if filter.Location != "" {
+		locationTerm := "%" + filter.Location + "%"
+		query = query.Where("address LIKE ?", locationTerm)
+	}
+
+	// Filtro por precios
+	if filter.MinPrice > 0 {
+		query = query.Where("base_price_per_night >= ?", filter.MinPrice)
+	}
+	if filter.MaxPrice > 0 {
+		query = query.Where("base_price_per_night <= ?", filter.MaxPrice)
+	}
+
+	// Filtro por capacidad
+	if filter.GuestCount > 0 {
+		query = query.Where("max_capacity >= ?", filter.GuestCount)
+	}
+
+	// Filtro de Disponibilidad por Fechas
+	if filter.CheckInDate != nil && filter.CheckOutDate != nil {
+		// Subconsulta para encontrar IDs de propiedades OCUPADAS
+		// Se solapa si: (booking.check_in < filter.check_out) AND (booking.check_out > filter.check_in)
+		occupiedSubquery := r.db.Table("bookings").
+			Select("property_id").
+			Where("status IN (?, ?)", "CONFIRMED", "PENDING_PAYMENT").
+			Where("check_in_date < ? AND check_out_date > ?", filter.CheckOutDate, filter.CheckInDate)
+
+		query = query.Where("id NOT IN (?)", occupiedSubquery)
+	}
+
+	err := query.Find(&models).Error
 	if err != nil {
 		return nil, err
 	}

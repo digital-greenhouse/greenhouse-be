@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"digital-greenhouse/greenhouse-be/internal/domain"
 	"digital-greenhouse/greenhouse-be/internal/http/dto"
@@ -75,4 +78,60 @@ func (h *PaymentHandler) VerifyPayment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonResponse(w, http.StatusOK, map[string]string{"message": "pago procesado exitosamente"})
+}
+
+func (h *PaymentHandler) DownloadProof(w http.ResponseWriter, r *http.Request) {
+	paymentID, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
+	if err != nil {
+		errResponse(w, http.StatusBadRequest, "ID de pago inválido")
+		return
+	}
+
+	requesterID := middleware.GetUserID(r.Context())
+	payment, err := h.service.GetPaymentProof(r.Context(), uint(paymentID), requesterID)
+	if err != nil {
+		errResponse(w, http.StatusForbidden, err.Error())
+		return
+	}
+
+	// 1. Limpiar el prefijo Base64 si existe (ej: data:image/jpeg;base64,)
+	rawBase64 := payment.ProofData
+	if idx := strings.Index(rawBase64, ";base64,"); idx != -1 {
+		rawBase64 = rawBase64[idx+8:]
+	}
+
+	// 2. Limpiar espacios y saltos de línea (robustez)
+	rawBase64 = strings.Join(strings.Fields(rawBase64), "")
+
+	// 3. Decodificar (intentar estándar y luego raw por si falta padding)
+	data, err := base64.StdEncoding.DecodeString(rawBase64)
+	if err != nil {
+		data, err = base64.RawStdEncoding.DecodeString(rawBase64)
+		if err != nil {
+			errResponse(w, http.StatusInternalServerError, "error decodificando comprobante: "+err.Error())
+			return
+		}
+	}
+
+	// 4. Configurar headers para descarga
+	w.Header().Set("Content-Type", payment.ProofMimeType)
+	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
+
+	// Determinar extensión según el MIME type
+	ext := ""
+	switch payment.ProofMimeType {
+	case "image/jpeg":
+		ext = ".jpg"
+	case "image/png":
+		ext = ".png"
+	case "application/pdf":
+		ext = ".pdf"
+	case "image/webp":
+		ext = ".webp"
+	}
+
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=comprobante_%d%s", payment.ID, ext))
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 }

@@ -23,6 +23,10 @@ func NewBookingService(repo domain.BookingRepository, propertyRepo domain.Proper
 
 func (s *bookingService) CalculateQuote(ctx context.Context, propertyID uint, clientID *uint, checkIn, checkOut time.Time, guests int) (*domain.Quote, error) {
 	// 1. Validaciones básicas
+	if guests <= 0 {
+		return nil, errors.New("el número de huéspedes debe ser al menos 1")
+	}
+
 	if checkOut.Before(checkIn) || checkOut.Equal(checkIn) {
 		return nil, errors.New("la fecha de salida debe ser posterior a la de entrada")
 	}
@@ -158,4 +162,18 @@ func (s *bookingService) CancelBooking(ctx context.Context, bookingID uint, reas
 
 func (s *bookingService) GetClientHistory(ctx context.Context, clientID uint) ([]domain.Booking, error) {
 	return s.repo.GetBookingsByClientID(ctx, clientID)
+}
+
+func (s *bookingService) GetReservedDates(ctx context.Context, propertyID uint) ([]domain.Booking, error) {
+	// Verificar que la propiedad exista
+	_, err := s.propertyRepo.GetByID(ctx, propertyID)
+	if err != nil {
+		return nil, errors.New("propiedad no encontrada")
+	}
+
+	return s.repo.GetReservedDatesByPropertyID(ctx, propertyID)
+}
+
+func (s *bookingService) GetOwnerBookings(ctx context.Context, ownerID uint) ([]domain.Booking, error) {
+	return s.repo.GetBookingsByOwnerID(ctx, ownerID)
 }

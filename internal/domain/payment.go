@@ -41,4 +41,5 @@ type PaymentRepository interface {
 type PaymentService interface {
 	ProcessPaymentProof(ctx context.Context, bookingID uint, amount float64, method PaymentMethod, proofData string, mimeType string) (*Payment, error)
 	VerifyPayment(ctx context.Context, paymentID uint, verifierID uint, status PaymentStatus, reason string) error
+	GetPaymentProof(ctx context.Context, paymentID uint, requesterID uint) (*Payment, error)
 }
